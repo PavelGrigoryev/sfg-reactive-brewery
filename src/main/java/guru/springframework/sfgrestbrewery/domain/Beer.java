@@ -20,15 +20,15 @@ import java.time.LocalDateTime;
 //@Entity
 public class Beer {
 
-   /* @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type="org.hibernate.type.UUIDCharType")
-    @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)*/
+    /* @Id
+     @GeneratedValue(generator = "UUID")
+     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+     @Type(type="org.hibernate.type.UUIDCharType")
+     @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)*/
     @Id
     private Integer id;
 
-   // @Version
+    // @Version
     private Long version;
 
     private String beerName;
@@ -38,10 +38,10 @@ public class Beer {
     private Integer quantityOnHand;
     private BigDecimal price;
 
-   /* @CreationTimestamp
-    @Column(updatable = false)*/
+    /* @CreationTimestamp
+     @Column(updatable = false)*/
     private LocalDateTime createdDate;
 
-   // @UpdateTimestamp
+    // @UpdateTimestamp
     private LocalDateTime lastModifiedDate;
 }

@@ -22,12 +22,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created by jt on 3/7/21.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class WebClientIT {
+class WebClientIT {
 
     public static final String BASE_URL = "http://localhost:8080";
 
@@ -65,10 +66,11 @@ public class WebClientIT {
                                         .accept(MediaType.APPLICATION_JSON)
                                         .retrieve()
                                         .bodyToMono(BeerDto.class);
-                            }).subscribe(savedDto -> {}, throwable -> countDownLatch.countDown());
+                            }).subscribe(savedDto -> {
+                            }, throwable -> countDownLatch.countDown());
                 });
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -87,11 +89,11 @@ public class WebClientIT {
                 .retrieve()
                 .toBodilessEntity()
                 .subscribe(voidResponseEntity -> {
-                    }, throwable -> {
-                    if (throwable.getClass().getName().equals("org.springframework.web.reactive.function.client.WebClientResponseException$NotFound")){
+                }, throwable -> {
+                    if (throwable.getClass().getName().equals("org.springframework.web.reactive.function.client.WebClientResponseException$NotFound")) {
                         WebClientResponseException ex = (WebClientResponseException) throwable;
 
-                        if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)){
+                        if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                             countDownLatch.countDown();
                         }
                     }
@@ -99,8 +101,8 @@ public class WebClientIT {
 
         countDownLatch.countDown();
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -131,7 +133,7 @@ public class WebClientIT {
                             .toBodilessEntity()
                             .flatMap(voidResponseEntity -> {
                                 countDownLatch.countDown();
-                                return  webClient.get().uri("/api/v1/beer/" + beerDto.getId())
+                                return webClient.get().uri("/api/v1/beer/" + beerDto.getId())
                                         .accept(MediaType.APPLICATION_JSON)
                                         .retrieve()
                                         .bodyToMono(BeerDto.class);
@@ -140,8 +142,8 @@ public class WebClientIT {
                                 countDownLatch.countDown();
                             });
                 });
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -161,13 +163,10 @@ public class WebClientIT {
                 .retrieve()
                 .toBodilessEntity();
 
-        beerResponseMono.publishOn(Schedulers.parallel()).subscribe(voidResponseEntity -> {
-            assertThat(voidResponseEntity.getStatusCode().is2xxSuccessful());
-            countDownLatch.countDown();
-        });
+        beerResponseMono.publishOn(Schedulers.parallel()).subscribe(voidResponseEntity -> countDownLatch.countDown());
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -189,8 +188,8 @@ public class WebClientIT {
 
                 });
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -201,15 +200,15 @@ public class WebClientIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve().bodyToMono(BeerDto.class);
 
-        beerDtoMono.subscribe(beer ->{
+        beerDtoMono.subscribe(beer -> {
             assertThat(beer).isNotNull();
             assertThat(beer.getBeerName()).isNotNull();
 
             countDownLatch.countDown();
         });
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -227,8 +226,8 @@ public class WebClientIT {
             countDownLatch.countDown();
         });
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -240,9 +239,6 @@ public class WebClientIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve().bodyToMono(BeerPagedList.class);
 
-
-//        BeerPagedList pagedList = beerPagedListMono.block();
-//        pagedList.getContent().forEach(beerDto -> System.out.println(beerDto.toString()));
         beerPagedListMono.publishOn(Schedulers.parallel()).subscribe(beerPagedList -> {
 
             beerPagedList.getContent().forEach(beerDto -> System.out.println(beerDto.toString()));
@@ -251,6 +247,7 @@ public class WebClientIT {
         });
 
         countDownLatch.await();
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -258,9 +255,9 @@ public class WebClientIT {
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        Mono<BeerPagedList> beerPagedListMono = webClient.get().uri(uriBuilder -> {
-                    return uriBuilder.path("/api/v1/beer").queryParam("pageSize", "5").build();
-                })
+        Mono<BeerPagedList> beerPagedListMono = webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/v1/beer").queryParam("pageSize", "5")
+                        .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve().bodyToMono(BeerPagedList.class);
 
@@ -271,8 +268,8 @@ public class WebClientIT {
             countDownLatch.countDown();
         });
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 
     @Test
@@ -280,9 +277,9 @@ public class WebClientIT {
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        Mono<BeerPagedList> beerPagedListMono = webClient.get().uri(uriBuilder -> {
-                    return uriBuilder.path("/api/v1/beer").queryParam("beerName", "Mango Bobs").build();
-                })
+        Mono<BeerPagedList> beerPagedListMono = webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/v1/beer").queryParam("beerName", "Mango Bobs")
+                        .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve().bodyToMono(BeerPagedList.class);
 
@@ -293,7 +290,7 @@ public class WebClientIT {
             countDownLatch.countDown();
         });
 
-        countDownLatch.await(1000, TimeUnit.MILLISECONDS);
-        assertThat(countDownLatch.getCount()).isEqualTo(0);
+        assertTrue(countDownLatch.await(1000, TimeUnit.MILLISECONDS));
+        assertThat(countDownLatch.getCount()).isZero();
     }
 }

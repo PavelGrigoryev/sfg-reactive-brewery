@@ -6,8 +6,6 @@ import guru.springframework.sfgrestbrewery.web.model.BeerStyleEnum;
 import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
-
 /**
  * Created by jt on 2019-04-20.
  */
@@ -16,7 +14,7 @@ public interface BeerService {
 
     Mono<BeerDto> getById(Integer beerId, Boolean showInventoryOnHand);
 
-     Mono<BeerDto> saveNewBeer(BeerDto beerDto);
+    Mono<BeerDto> saveNewBeer(BeerDto beerDto);
 
     Mono<BeerDto> updateBeer(Integer beerId, BeerDto beerDto);
 

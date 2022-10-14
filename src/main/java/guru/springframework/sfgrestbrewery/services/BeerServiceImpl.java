@@ -66,7 +66,7 @@ public class BeerServiceImpl implements BeerService {
     @Cacheable(cacheNames = "beerCache", key = "#beerId", condition = "#showInventoryOnHand == false ")
     @Override
     public Mono<BeerDto> getById(Integer beerId, Boolean showInventoryOnHand) {
-        if (showInventoryOnHand) {
+        if (Boolean.TRUE.equals(showInventoryOnHand)) {
             return beerRepository.findById(beerId).map(beerMapper::beerToBeerDtoWithInventory);
         } else {
             return beerRepository.findById(beerId).map(beerMapper::beerToBeerDto);
